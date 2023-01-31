@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  frontend:
+    image: "conduit-frontend"
+    build:
+      context: "./project-frontend"
+    ports:
+      - "80:80"
+    depends_on: ["backend"]
+
+  backend:
+    image: "conduit-backend"
+    build:
+      context: "./project-backend"
+    environment:
+      DATABASE_USER_FILE: /run/secrets/mongo-user
+      DATABASE_PASSWORD_FILE: /run/secrets/mongo-password
+      DATABASE_HOST: database
+      ACCESS_TOKEN_SECRET_FILE: /run/secrets/jwt-secret
+    ports:
+      - "3000:4000"
+    secrets:
+      - mongo-user
+      - mongo-password
+      - jwt-secret
+    depends_on: ["database"]
+
+  database:
+    image: mongo:6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME_FILE: /run/secrets/mongo-user
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo-password
+      MONGO_INITDB_DATABASE_FILE: /run/secrets/mongo-database
+    secrets:
+      - mongo-user
+      - mongo-password
+      - mongo-database
+
+secrets:
+  mongo-user:
+    external: true
+  mongo-password:
+    external: true
+  jwt-secret:
+    external: true
+  mongo-database:
+    external: true
